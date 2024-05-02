@@ -1,8 +1,4 @@
 data
-Trade_exploration/edges_additional.csv
-Trade_exploration/edges_BHS.csv
-Trade_exploration/edges_mst.csv
-Trade_exploration/edges.csv
-Trade_exploration/nodes_country.csv
-Trade_exploration/nodes_mst.csv
-Trade_exploration/nodes.csv
+Trade_exploration
+graphs.pkl
+region_graphs.pkl
