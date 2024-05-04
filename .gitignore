@@ -1,4 +1,5 @@
 data
 Trade_exploration
-graphs.pkl
-region_graphs.pkl
+graphs
+distances
+netrd
