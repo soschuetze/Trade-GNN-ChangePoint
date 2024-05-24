@@ -4,3 +4,5 @@ graphs
 distances
 netrd
 .env
+feature_dicts
+csv_files
