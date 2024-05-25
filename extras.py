@@ -1,51 +1,38 @@
-# import torch
-# import torch.nn as nn
-# import torch.optim as optim
-# from torch_geometric.nn import GCNConv, global_sort_pool
-# from torch_geometric.nn.aggr import SortAggregation
-# from torch.nn import Linear, LayerNorm, ReLU, Sigmoid
-# from tqdm import tqdm
-# from torch.optim.lr_scheduler import StepLR
+# years = range(1962,2019)
 
+# train_years = [2005, 1969, 2002, 1997, 1993, 1982, 2001, 2000, 1962, 1985, 1978, 2016, 1986, 1987, 1989, 1971, 2013, 1996, 1995, 1967, 2017, 1974, 1990, 1977, 1980, 2014, 1965, 1984, 2006, 1973, 1968, 1981, 1970, 1991]
+# val_years = [1975, 1983, 2009, 1966, 1999, 1988, 2007, 1979, 1972, 2015, 2003]
+# test_years = [1963, 1964, 1976, 1992, 1994, 1998, 2004, 2008, 2010, 2011, 2012, 2018]
 
-# class GNN(torch.nn.Module):
-#     def __init__(self, num_features):
-#         super(GNN, self).__init__()
-#         self.conv1 = GCNConv(num_features, 128)
-#         self.conv2 = GCNConv(128, 64)
+# train_graphs = []
+# val_graphs = []
+# test_graphs = []
+# i = 0
 
-#     def forward(self, data):
-#         x, edge_index = data.x, data.edge_index.to(torch.int64)
-#         x = self.conv1(x, edge_index).relu()
-#         x = self.conv2(x, edge_index).relu()
-#         return x
-
-# class SiameseGNN(torch.nn.Module):
-#     def __init__(self, num_features):
-#         super(SiameseGNN, self).__init__()
-#         self.gnn = GNN(num_features)
-#         self.sort_aggr = SortAggregation(k=50)
-#         self.fc1 = Linear(9950, 128)  # Adjust input size according to pooling output
-#         self.norm1 = LayerNorm(128)
-#         self.relu1 = ReLU()
-#         self.fc2 = Linear(128, 64)
-#         self.norm2 = LayerNorm(64)
-#         self.relu2 = ReLU()
-#         self.fc3 = Linear(64, 1)
-#         self.sigmoid = Sigmoid()
-
-#     def forward(self, data1, data2):
-#         out1 = self.gnn(data1)
-#         out2 = self.gnn(data2)
-#         out = torch.cdist(out1, out2, p=2)
-#         out = self.sort_aggr(out, data1.batch)
-#         out = out.view(out.size(0), -1)  # Flatten the pooled output
-#         out = self.fc1(out)
-#         out = self.norm1(out)
-#         out = self.relu1(out)
-#         out = self.fc2(out)
-#         out = self.norm2(out)
-#         out = self.relu2(out)
-#         out = self.fc3(out)
-#         out = self.sigmoid(out)
-#         return out
+# for year in tqdm(years):
+#     print(str(year), end='\r')
+    
+#     trade = TradeNetwork(year = year)
+#     trade.prepare_features()
+#     trade.prepare_network()
+#     trade.graph_create(node_features = ['prev_gdp_per_cap_growth', 'current_gdp_per_cap_growth',
+#     'resource_0', 'resource_1', 'resource_2', 'resource_3', 'resource_4', 'resource_5', 'resource_6', 'resource_7',
+#        'resource_8', 'resource_9'],
+#         node_labels = 'future_gdp_per_cap_growth')
+    
+#     if(year in val_years):
+#         val_graphs.append(trade.pyg_graph)
+#     elif(year in test_years):
+#         test_graphs.append(trade.pyg_graph)
+#     else: 
+#         train_graphs.append(trade.pyg_graph)
+        
+#     trade.features["year"] = year
+    
+#     if(i == 0):
+#         trade_df = trade.features
+#     else: 
+#         trade_df = pd.concat([trade_df, trade.features])
+        
+#     i = i+1
+#     print(trade.node_attributes.size())
