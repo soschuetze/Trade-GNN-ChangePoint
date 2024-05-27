@@ -7,6 +7,7 @@ import torch_geometric.datasets as datasets
 import torch_geometric.data as data
 import torch_geometric.transforms as transforms
 import requests
+import numpy as np
 
 
 def get_sitc_codes():
