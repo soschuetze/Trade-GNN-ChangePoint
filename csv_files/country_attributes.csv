@@ -1,4 +1,4 @@
-Source,latitude,longitude,id,location_code,parent_id,region
+Label,latitude,longitude,id,location_code,parent_id,region
 AFG,33.85639928169076,66.08669022192831,0,AFG,353.0,Asia
 AGO,-12.245869036133188,17.47057255231345,1,AGO,352.0,Africa
 ALB,41.141353306048785,20.03242643144321,2,ALB,355.0,Europe
