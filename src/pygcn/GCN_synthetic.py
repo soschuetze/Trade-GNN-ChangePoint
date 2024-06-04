@@ -3,6 +3,10 @@ from torch.nn import Linear, LayerNorm, ReLU
 from torch_geometric.nn import GCNConv, global_sort_pool
 from torch_geometric.utils import degree
 from torch_geometric.nn.aggr import SortAggregation
+from src.utils.graphs import laplacian_embeddings, random_walk_embeddings, degree_matrix
+from torch_geometric.utils import to_networkx
+import networkx as nx
+import numpy as np
 
 class GNN(torch.nn.Module):
     def __init__(self):
@@ -12,8 +16,8 @@ class GNN(torch.nn.Module):
 
     def forward(self, data):
         # Use node degrees as features
-        edge_index = data.edge_index.to(torch.int64)
-        x = degree(data.edge_index[0], dtype=torch.float).view(-1, 1)
+        x, edge_index = data.x, data.edge_index.to(torch.int64)
+        x = torch.tensor(x, dtype=torch.float32)
         x = self.conv1(x, edge_index).relu()
         x = self.conv2(x, edge_index).relu()
         return x
