@@ -169,7 +169,7 @@ def sample_pygcn_graph(sbm_args):
 
     if sbm_args['features'] is not None:
         nx_graph, features = nxSBM(**sbm_args)
-        adjacency = nx.to_scipy_sparse_matrix(nx_graph, format='csr')
+        adjacency = nx.to_scipy_sparse_array(nx_graph, format='csr')
 
         edge_index = torch.tensor(adjacency.nonzero(), dtype=torch.long)
         features = torch.FloatTensor(features)
@@ -177,7 +177,7 @@ def sample_pygcn_graph(sbm_args):
 
     else:
         nx_graph, _ = nxSBM(**sbm_args) # if generated as arrays
-        adjacency = nx.to_scipy_sparse_matrix(nx_graph, format='csr')
+        adjacency = nx.to_scipy_sparse_array(nx_graph, format='csr')
         edge_index = torch.tensor(adjacency.nonzero(), dtype=torch.long)
         graph = Data(edge_index=edge_index)
 
