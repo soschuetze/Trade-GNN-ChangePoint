@@ -23,10 +23,7 @@ def identity(n, sparse=True):
     :return:
     """
 
-    if not sparse:
-        return np.eye(n)
-    else:
-        return ss.eye(n)
+    return ss.eye(m=n, n=1).toarray()
 
 
 def laplacian(A, sparse=True):

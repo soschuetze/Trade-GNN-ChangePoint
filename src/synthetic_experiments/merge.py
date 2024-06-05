@@ -107,12 +107,12 @@ def get_args():
 
     parser.add_argument('--sizes_1', type=int, nargs="+", default=[100, 100, 100, 100])
     parser.add_argument('--sizes_2', type=int, nargs="+", default=[200, 200])
-    parser.add_argument('--p', type=float, default=0.5)
+    parser.add_argument('--p', type=float, default=1.0)
     parser.add_argument('--q', type=float, default=0.2)
     parser.add_argument('--n_samples', type=int, default=200)
     parser.add_argument('--features', type=str, choices=['gaussian'], default=None)
     parser.add_argument('--sequence', action='store_true', default=True)
-    parser.add_argument('--save_dir', type=str,  default='../../results/synthetic/')
+    parser.add_argument('--save_dir', type=str,  default='../../results/synthetic/merge/')
     parser.add_argument('--rep', type=int, default=0)
 
     args = parser.parse_args()

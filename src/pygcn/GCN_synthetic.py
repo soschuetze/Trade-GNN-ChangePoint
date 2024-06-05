@@ -7,12 +7,13 @@ from src.utils.graphs import laplacian_embeddings, random_walk_embeddings, degre
 from torch_geometric.utils import to_networkx
 import networkx as nx
 import numpy as np
+from torch import nn, optim
 
 class GNN(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, hidden_units):
         super(GNN, self).__init__()
         self.conv1 = GCNConv(1, 128)  # Input feature size is 1 (node degree)
-        self.conv2 = GCNConv(128, 64)
+        self.conv2 = GCNConv(128, hidden_units)
 
     def forward(self, data):
         # Use node degrees as features
@@ -23,18 +24,21 @@ class GNN(torch.nn.Module):
         return x
 
 class SiameseGNN(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, hidden_units, sort_k, dropout_rate):
         super(SiameseGNN, self).__init__()
-        self.gnn = GNN()
-        self.sort_aggr = SortAggregation(k=50)
+        self.gnn = GNN(hidden_units)
+        self.sort_aggr = SortAggregation(k=sort_k)
 
-        self.fc1 = Linear(20000, 128)  # Adjust input size according to pooling output
+        fc1_input_size = sort_k * 400
+        self.fc1 = Linear(fc1_input_size, 128)  # Adjust input size according to pooling output
         self.norm1 = LayerNorm(128)
         self.relu1 = ReLU()
+        self.dropout1 = nn.Dropout(dropout_rate)
 
         self.fc2 = Linear(128, 64)
         self.norm2 = LayerNorm(64)
         self.relu2 = ReLU()
+        self.dropout2 = nn.Dropout(dropout_rate)
 
         self.fc3 = Linear(64, 1)
 
@@ -50,11 +54,13 @@ class SiameseGNN(torch.nn.Module):
         out = self.fc1(out)
         out = self.norm1(out)
         out = self.relu1(out)
+        out = self.dropout1(out)
 
         # Fully Connected Layer 2
         out = self.fc2(out)
         out = self.norm2(out)
         out = self.relu2(out)
+        out = self.dropout2(out)
 
         out = self.fc3(out)
         out = torch.sigmoid(out)
