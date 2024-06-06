@@ -12,7 +12,7 @@ from torch import nn, optim
 class GNN(torch.nn.Module):
     def __init__(self, hidden_units):
         super(GNN, self).__init__()
-        self.conv1 = GCNConv(1, 128)  # Input feature size is 1 (node degree)
+        self.conv1 = GCNConv(400, 128)  # Input feature size is 1 (node degree)
         self.conv2 = GCNConv(128, hidden_units)
 
     def forward(self, data):
@@ -64,4 +64,4 @@ class SiameseGNN(torch.nn.Module):
 
         out = self.fc3(out)
         out = torch.sigmoid(out)
-        return out
+        return out  # Return logits without sigmoid
