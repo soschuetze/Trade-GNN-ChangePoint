@@ -7,8 +7,8 @@ import argparse
 from datetime import datetime
 from pathlib import PosixPath
 import os
-from src.utils.functions import add_features_dataset, load_model, load_sequence, prepare_batches
-from src.utils.misc import collate, convert_labels_into_changepoints, NpEncoder, get_device
+from src.utils.functions import load_model, load_sequence, prepare_batches
+from src.utils.misc import convert_labels_into_changepoints, NpEncoder, get_device
 from src.utils.metrics import adjust_predicts_donut, binary_metrics_adj, compute_ari
 import ruptures as rpt
 
@@ -22,11 +22,6 @@ def compute_sgnn_similarity(model, sequence, window_length):
     :return:
     """
 
-    if not 'node_attr' in sequence[0].ndata:
-        print("Adding positional encodings...", model.features)
-        sequence = add_features_dataset(sequence, model.features, model.input_dim)
-
-
     batches = prepare_batches(sequence, window_length=window_length)
     device = get_device()
     model = model.to(device)
@@ -34,12 +29,13 @@ def compute_sgnn_similarity(model, sequence, window_length):
     idx = [] # indices of times at which the average similarity is computed
 
     with torch.no_grad():
-        for (graph1, graph2, i) in batches: # each batch contains a L similarity score within a window
+        for (graph1_batch, graph2_batch, i) in batches: # each batch contains a L similarity score within a window
+            pred = 0
+            for graph1, graph2 in zip(graph1_batch, graph2_batch):
+                
+                pred +=  model(graph1, graph2).item()
 
-            graph1, graph2 = graph1.to(device), graph2.to(device)
-            pred =  torch.sigmoid(model(graph1, graph2)).detach().cpu().mean().item()
-
-            avg_sim.append(pred)
+            avg_sim.append(pred/len(graph1_batch))
             idx.append(i[0].item())
 
     return np.array(avg_sim), np.array(idx)
@@ -51,13 +47,12 @@ def detect_change_point(args=None):
     print(f"Working on {device}")
 
     # Load s-GNN model
-    model, model_args = load_model(args.model_path, device=device)
+    model = load_model(args.model_path, device=device)
 
     # Create subdirectory for results
     save_dir = (f'NCPD_{datetime.utcnow().strftime("%m_%d_%H:%M:%S")}'
                 f'_window_{args.window_length}'
                 f'_{args.task}'
-                f'_features_{model_args["features"]}'
                 )
     save_dir = PosixPath(args.save_dir).expanduser() / save_dir
 
@@ -68,8 +63,8 @@ def detect_change_point(args=None):
         true_labels = convert_labels_into_changepoints(true_labels, tolerance=args.tolerance)
 
     avg_sim, idx = compute_sgnn_similarity(model, data, window_length=args.window_length)
-    T = len(data)
 
+    T = len(data)
     # Method 1: detect change-points when similarity below threshold
     est_labels = (np.array(avg_sim) < args.threshold).astype(int)
     # add 0 labels for the first L time stamps
@@ -84,16 +79,6 @@ def detect_change_point(args=None):
 
     print("Method 1: change points detected at times ", est_cps)
 
-    # Method 2: detect change points by applying PELT algo on the similarity statistic
-    algo = rpt.Pelt(model='rbf', min_size=args.window_length).fit(avg_sim)
-    est_cps_m2 = algo.predict(pen=3)
-    est_cps_m2 = idx[0] + np.array(est_cps_m2[:-1])
-    est_labels_m2 = np.zeros(idx[0]+len(avg_sim)).astype(int)
-    for id in est_cps_m2:
-        est_labels_m2[id] = 1
-
-    print("Method 2: change points detected at times ", est_cps_m2)
-
     # save similarity, change-point labels, and hyperparameters
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
@@ -104,12 +89,8 @@ def detect_change_point(args=None):
         pickle.dump(est_labels, f)
     with open(save_dir / 'est_cps.p', 'wb') as f:
         pickle.dump(est_cps, f)
-    with open(save_dir / 'est_cps_m2.p', 'wb') as f:
-        pickle.dump(est_cps_m2, f)
     with open(save_dir / 'args.json', 'w') as fp:
         json.dump(args.__dict__, fp, indent=2)
-    with open(save_dir / 'model_args.json', 'w') as fp:
-        json.dump(model_args, fp, indent=2)
     with open(save_dir / 'times.p', 'wb') as f:
         pickle.dump(idx, f)
 
@@ -124,20 +105,11 @@ def detect_change_point(args=None):
             only_f1=False,
         )
 
-        metrics_best_m2 = binary_metrics_adj(
-            score=est_labels_m2,
-            target=np.array(true_labels),
-            threshold=0.5,
-            adjust_predicts_fun=adjust_predicts_donut,
-            only_f1=False,
-        )
-
-        print(f"Test F1 score (m1 and m2) ", metrics_best["f1"], metrics_best_m2["f1"])
+        print(f"Test F1 score", metrics_best["f1"])
 
         ari = compute_ari(est_cps, true_cps, T)
-        ari_m2 = compute_ari(est_cps_m2, true_cps, T)
 
-        print(f"Test ARI (m1 and m2): ", ari, ari_m2)
+        print(f"Test ARI: ", ari)
 
         if args.single:
             cp_error = args.window_length + 1 + np.argmin(avg_sim) - true_cps[0]
@@ -151,10 +123,8 @@ def detect_change_point(args=None):
 
         with open(save_dir / 'test_ari.json', 'w') as f:
             json.dump(ari, f, cls=NpEncoder)
-        with open(save_dir / 'test_ari_m2.json', 'w') as f:
-            json.dump(ari_m2, f, cls=NpEncoder)
 
-    return str(save_dir), metrics_best, ari, metrics_best_m2, ari_m2
+    return str(save_dir), metrics_best, ari
 
     #d_sim = np.abs(np.array(sim[1:]) - np.array(sim[:-1]))
 
@@ -165,11 +135,11 @@ def detect_change_point(args=None):
 def get_args():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test_data', type=str, help='Path to dynamic network data.')
+    parser.add_argument('--test_data', type=str, default='results/test_synthetic/', help='Path to dynamic network data.')
     parser.add_argument('--single', action='store_true', default=False)
     #parser.add_argument('--features', type=str, default='identity', help='Positional features to add if no node attributes in the data.')
-    parser.add_argument('--model_path', type=str, help='Path to model for detecting change-points.')
-    parser.add_argument('--save_dir', type=str, default='/data/kenlay/DyNNet/results/synthetic/', help='Name of folder where to store results')
+    parser.add_argument('--model_path', type=str, default='models/sgnn-topk30-16hidden-20clique.pt', help='Path to model for detecting change-points.')
+    parser.add_argument('--save_dir', type=str, default='results/test_results/', help='Name of folder where to store results')
     parser.add_argument('--window_length', type=int, default=6, help='Length of backward window')
     parser.add_argument('--threshold', type=float, default=0.5, help='Threshold on the similarity statistic to detect change-points')
     parser.add_argument('--cuda', type=int, default=None, choices=[0, 1, 2, 3], help='GPU id')

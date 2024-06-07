@@ -22,10 +22,7 @@ def convert_labels_into_changepoints(labels: Union[np.ndarray, list], tolerance=
 def collate(samples, add_selfloops=True):
     """Used to create DGL dataloaders."""
     graphs1, graphs2, labels = map(list, zip(*samples))
-    if add_selfloops:
-        graphs1 = [dgl.add_self_loop(graph) for graph in graphs1]
-        graphs2 = [dgl.add_self_loop(graph) for graph in graphs2]
-    graphs1, graphs2 = dgl.batch(graphs1), dgl.batch(graphs2)
+
     return graphs1, graphs2, torch.tensor(labels)
 
 

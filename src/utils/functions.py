@@ -7,8 +7,7 @@ import json
 from torch.utils.data import DataLoader
 import pickle
 import os
-from src.model import GraphSiamese
-from src.embedding import GCN
+from src.pygcn.GCN_synthetic import SiameseGNN
 from src.utils.misc import collate, get_device
 
 
@@ -64,9 +63,6 @@ def normalise_statistics(statistics):
     return norm_stat
 
 
-
-
-
 def prepare_batches(data, window_length):
 
     tuples = []
@@ -103,36 +99,10 @@ def load_sequence(datapath):
 
 def load_model(model_path: str, device=None):
 
-    #model_path = PosixPath(model_path).expanduser()
+    model = SiameseGNN(16, 30, 0.1)
+    model.load_state_dict(torch.load(model_path))
 
-    if os.path.isfile(model_path):
-        with open(model_path, 'rb') as f:
-            model_path = pickle.load(f)
-        model_path = str(model_path)
-        print("Last model trained loading...")
-
-    with open(model_path + '/args.json', 'r') as f:
-        args = json.load(f)
-
-    embedding = GCN(input_dim=args['input_dim'], type=args['embedding_module'],
-                    hidden_dim=args['hidden'], layers=args['nlayers'],
-                    dropout=args['dropout'])
-    model = GraphSiamese(embedding=embedding,
-                         dropout=args['dropout'],
-                         similarity=args['distance'],
-                         loss=args['loss'],
-                         pooling=args['pooling'],
-                         top_k=args['top_k'],
-                         nlinear=args['nlayers_mlp'],
-                         nhidden=args['hidden'],
-                         features=args['features'])
-    model.load_state_dict(torch.load(model_path + '/model.pt', map_location='cpu'))
-    if device is not None:
-        model = model.to(device)
-    model.eval()
-    print("Model loaded")
-
-    return model, args
+    return model
 
 
 def add_features(G, feat: str = 'degree', dim: int = 2):
