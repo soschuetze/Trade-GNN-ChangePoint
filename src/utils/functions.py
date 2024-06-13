@@ -82,13 +82,13 @@ def load_sequence(datapath):
         time = None
         labels = None
     else:
-        with open(datapath + '/data.p', 'rb') as f:
+        with open(datapath + '/20-data.p', 'rb') as f:
             data = pickle.load(f)
 
-        with open(datapath + '/labels.p', 'rb') as f:
+        with open(datapath + '/20-labels.p', 'rb') as f:
             labels = pickle.load(f)
 
-        with open(datapath + '/time.json') as f:
+        with open(datapath + '/20-time.json') as f:
             time = json.load(f)
 
     print(f"Data loaded: sequence of {len(data)} graphs with a change point at time {time}")
@@ -97,9 +97,9 @@ def load_sequence(datapath):
 
 
 
-def load_model(model_path: str, device=None):
+def load_model(model_path: str):
 
-    model = SiameseGNN(16, 30, 0.1)
+    model = SiameseGNN(64, 30, 0.05)
     model.load_state_dict(torch.load(model_path))
 
     return model

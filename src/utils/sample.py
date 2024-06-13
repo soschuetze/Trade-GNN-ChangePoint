@@ -149,10 +149,10 @@ def sample_pairs_in_window(sequence, labels, window_length=10, n_pairs=None, pat
 
             if lab < 0.05:
                 nneg += 1
-                pairs.append((sequence[i], sequence[i-j], lab))
+                pairs.append([sequence[i], sequence[i-j], lab])
             elif lab > 0.05:
                 npos += 1
-                pairs.append((sequence[i], sequence[i-j], lab))
+                pairs.append([sequence[i], sequence[i-j], lab])
             else:
                 pass
 

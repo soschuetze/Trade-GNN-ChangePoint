@@ -19,7 +19,7 @@ def convert_labels_into_changepoints(labels: Union[np.ndarray, list], tolerance=
     return cps
 
 
-def collate(samples, add_selfloops=True):
+def collate(samples):
     """Used to create DGL dataloaders."""
     graphs1, graphs2, labels = map(list, zip(*samples))
 
