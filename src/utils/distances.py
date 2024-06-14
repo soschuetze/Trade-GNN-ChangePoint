@@ -15,6 +15,9 @@ def distance_procrustes_LE(A, B, k = 10, normalize=True):
     sparse = False
     if isinstance(A, (ss.csc_matrix, ss.coo_matrix, ss.csr_matrix)):
         sparse = True
+
+    A = np.nan_to_num(A, nan=0, posinf=9999, neginf=-9999)
+    B = np.nan_to_num(B, nan=0, posinf=9999, neginf=-9999)
     LE1 = laplacian_embeddings(A, k=k, sparse=sparse, normalize=normalize)
 
     sparse = False

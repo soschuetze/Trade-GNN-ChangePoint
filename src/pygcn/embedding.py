@@ -19,4 +19,9 @@ class GCN(nn.Module):
 
         x, edge_index = graph.x, graph.edge_index.to(torch.int64)
 
+        for i in range(self.nlayers-1):
+            x = torch.relu(self._modules['layer{}'.format(i)](edge_index,x).squeeze())
+            x = self.dropout(x)
+        x = self._modules['layer{}'.format(self.nlayers-1)](edge_index,x).squeeze()
+
         return x

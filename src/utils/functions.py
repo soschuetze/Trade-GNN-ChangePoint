@@ -7,9 +7,8 @@ import json
 from torch.utils.data import DataLoader
 import pickle
 import os
-from src.pygcn.GCN_synthetic import SiameseGNN
+from src.pygcn.model import GraphSiamese
 from src.utils.misc import collate, get_device
-
 
 
 def dist_labels_to_changepoint_labels(labels: Union[np.ndarray, list]):

@@ -9,21 +9,6 @@ import networkx as nx
 import numpy as np
 from torch import nn, optim
 import torch.nn.functional as F
-
-class GNN(torch.nn.Module):
-    def __init__(self, hidden_units, dropout_rate):
-        super(GNN, self).__init__()
-        self.conv1 = GCNConv(400, 128)  # Input feature size is 400
-        self.conv2 = GCNConv(128, hidden_units)
-
-    def forward(self, x, edge_index, batch):
-        x = torch.tensor(x, dtype=torch.float32)
-        if x.size(1) != 400:  # Ensure correct padding size
-            pad_size = (400 - x.size(1), 0, 400 - x.size(0), 0)
-            x = F.pad(x, pad_size, "constant", 0)
-        x = self.conv1(x, edge_index).relu()
-        x = self.conv2(x, edge_index).relu()
-        return x
     
 class MLP(nn.Module):
     """MLP with linear output"""
