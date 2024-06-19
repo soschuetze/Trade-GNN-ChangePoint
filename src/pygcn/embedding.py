@@ -1,27 +1,29 @@
 import torch.nn as nn
-from dgl.nn.pytorch.conv import GraphConv
+from torch_geometric.nn import GraphConv, global_mean_pool
 import torch
 import torch.nn.functional as F
 
 class GCN(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim=16, layers=3, dropout=0.1, **kwargs):
+    def __init__(self, input_dim, hidden_dim=16, dropout=0.1, **kwargs):
         super(GCN, self).__init__()
         self.dropout = nn.Dropout(dropout)
-        self.nlayers = layers
         self.input_dim = input_dim
 
-        self.layer0 = GraphConv(input_dim, hidden_dim)
-        for i in range(layers-1):
-            self.add_module('layer{}'.format(i + 1), GraphConv(hidden_dim, hidden_dim))
+        self.gnn1 = GraphConv(input_dim, hidden_dim)
+        self.gnn2 = GraphConv(hidden_dim, hidden_dim)
+
+        self.relu = nn.ReLU()
 
     def forward(self, graph):
 
-        x, edge_index = graph.x, graph.edge_index.to(torch.int64)
+        x, edge_index = torch.tensor(graph.x).float(), graph.edge_index.to(torch.int64)
+        x = self.gnn1(x, edge_index)
+        x = self.relu(x)
+        x = self.dropout(x)
 
-        for i in range(self.nlayers-1):
-            x = torch.relu(self._modules['layer{}'.format(i)](edge_index,x).squeeze())
-            x = self.dropout(x)
-        x = self._modules['layer{}'.format(self.nlayers-1)](edge_index,x).squeeze()
+        x = self.gnn2(x, edge_index)
+        x = self.relu(x)
+        x = self.dropout(x)
 
         return x

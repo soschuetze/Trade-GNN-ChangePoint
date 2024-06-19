@@ -9,6 +9,7 @@ import networkx as nx
 import numpy as np
 from torch import nn, optim
 import torch.nn.functional as F
+from torch_geometric.utils import to_networkx, to_batch
     
 class MLP(nn.Module):
     """MLP with linear output"""
@@ -28,7 +29,7 @@ class MLP(nn.Module):
         self.linears.append(nn.Linear(hidden_dim, output_dim))
 
         for layer in range(num_layers - 1):
-            self.batch_norms.append(nn.BatchNorm1d((hidden_dim)))
+            self.batch_norms.append(nn.BatchNorm1d(hidden_dim))
 
 
     def forward(self, x):
@@ -56,14 +57,10 @@ class GraphSiamese(nn.Module):
         self.mlp = MLP(nlinear, top_k, nhidden, 1, dropout=dropout)
 
     def forward(self, graph1, graph2):
-
+        
         graph1_encoding = self.embedding(graph1)
         graph2_encoding = self.embedding(graph2)
 
-        graph1_encoding = torch.tensor(graph1_encoding, dtype=torch.float32)
-        graph2_encoding = torch.tensor(graph2_encoding, dtype=torch.float32)
-
-        # otherwise compute similarity/distance between the node-level embeddings
         similarity = self.similarity(graph1_encoding, graph2_encoding)
 
         x, _ = self.pooling_layer(similarity, k=self.top_k)

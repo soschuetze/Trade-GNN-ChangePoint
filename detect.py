@@ -34,7 +34,7 @@ def compute_sgnn_similarity(model, sequence, window_length):
                 pred +=  model(graph1, graph2).item()
 
             avg_sim.append(pred/len(graph1_batch))
-            idx.append(i[0].item())
+            idx.append(i[1].item())
 
     return np.array(avg_sim), np.array(idx)
 
@@ -60,7 +60,7 @@ def detect_change_point(args=None):
 
     T = len(data)
     # Method 1: detect change-points when similarity below threshold
-    est_labels = (np.array(avg_sim) < args.threshold).astype(int)
+    est_labels = (avg_sim < args.threshold).astype(int)
     # add 0 labels for the first L time stamps
     est_labels = np.concatenate([np.zeros(args.window_length).astype(int), est_labels], axis=0)
     # Only select positive labels for which there is not a positive labels in the previous L time stamps
@@ -133,8 +133,8 @@ def get_args():
     parser.add_argument('--single', action='store_true', default=False)
     #parser.add_argument('--features', type=str, default='identity', help='Positional features to add if no node attributes in the data.')
     parser.add_argument('--model_path', type=str, default='models/sgnn-topk30-64hidden-20clique.pt', help='Path to model for detecting change-points.')
-    parser.add_argument('--save_dir', type=str, default='results/test_results/30s/', help='Name of folder where to store results')
-    parser.add_argument('--window_length', type=int, default=6, help='Length of backward window')
+    parser.add_argument('--save_dir', type=str, default='results/test_results/50s/', help='Name of folder where to store results')
+    parser.add_argument('--window_length', type=int, default=2, help='Length of backward window')
     parser.add_argument('--threshold', type=float, default=0.5, help='Threshold on the similarity statistic to detect change-points')
     parser.add_argument('--cuda', type=int, default=None, choices=[0, 1, 2, 3], help='GPU id')
     parser.add_argument('--tolerance', type=int, default=3, help='Tolerance level in the adjusted F1 metric')

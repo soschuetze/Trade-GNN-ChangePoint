@@ -235,8 +235,6 @@ def evaluate_baseline(model, test_data, test_labels, window_length, metric='adju
     else:
         raise ValueError('Method not yet implemented')
 
-    thresh = 0.5
-
     # Normalise the statistics in [0,1]
     stat_test_norm = normalise_statistics(stat_test)
 
@@ -245,6 +243,8 @@ def evaluate_baseline(model, test_data, test_labels, window_length, metric='adju
 
     # Convert and adjust the distribution labels of the snaphots with the given tolerance level
     cp_lab_test = dist_labels_to_changepoint_labels(test_labels)[stat_test_times]
+    
+    thresh, test_score = find_best_threshold(score=stat_test_norm, target=cp_lab_test, metric=metric)
 
     # Evaluate on test sequence
     test_score = binary_metrics_adj(score=stat_test_norm, target=cp_lab_test, threshold=thresh,
@@ -256,8 +256,4 @@ def evaluate_baseline(model, test_data, test_labels, window_length, metric='adju
     true_cps = stat_test_times[np.where(cp_lab_test == 1)[0]]
     test_ari = compute_ari(det_cps, true_cps, T_test)
 
-
-    return test_ari, test_score
-
-
-
+    return test_ari, test_score, det_cps
