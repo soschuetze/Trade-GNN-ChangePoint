@@ -126,7 +126,7 @@ def which_community(node, sizes):
 
 
 
-def nxSBM(sizes, p, q, features=None, signal_means=None, signal_std=1.0):
+def nxSBM(num_nodes, type, sizes, p, q, features=None, signal_means=None, signal_std=1.0):
     """Generates attributed SBM graphs with Networkx library.
 
     Creates a graph with sum(sizes) nodes. The nodes are ordered 0,1,...,n-1 and are also ordered by their community
@@ -138,7 +138,6 @@ def nxSBM(sizes, p, q, features=None, signal_means=None, signal_std=1.0):
     p,q: intra/inter-cluster link probability
     signal_std: standard deviation of the signal
     """
-
     n = len(sizes)
     C = q * np.ones((n, n))
     np.fill_diagonal(C, p)
@@ -165,21 +164,27 @@ def nxSBM(sizes, p, q, features=None, signal_means=None, signal_std=1.0):
 
     return graph, None
 
+def nxER(num_nodes, type, sizes, p, q, features=None, signal_means=None, signal_std=1.0):
+    n = num_nodes
+    q = 0.02
+
+    graph = nx.erdos_renyi_graph(n, q)
+
+    return graph
+
 
 
 def sample_pygcn_graph(sbm_args):
 
-    if sbm_args['features'] is not None:
-        nx_graph, features = nxSBM(**sbm_args)
-        adjacency = nx.to_scipy_sparse_array(nx_graph, format='csr')
-
+    if sbm_args['type'] == 'er':
+        nx_er_graph = nxER(**sbm_args)
+        adjacency = nx.to_scipy_sparse_array(nx_er_graph, format='csr')
         edge_index = torch.tensor(adjacency.nonzero(), dtype=torch.long)
-        features = torch.FloatTensor(features)
-        graph = Data(x=features, edge_index=edge_index)
+        graph = Data(edge_index=edge_index)
 
     else:
-        nx_graph, _ = nxSBM(**sbm_args) # if generated as arrays
-        adjacency = nx.to_scipy_sparse_array(nx_graph, format='csr')
+        nx_sbm_graph, _ = nxSBM(**sbm_args) # if generated as arrays
+        adjacency = nx.to_scipy_sparse_array(nx_sbm_graph, format='csr')
         edge_index = torch.tensor(adjacency.nonzero(), dtype=torch.long)
         graph = Data(edge_index=edge_index)
 

@@ -1,53 +1,64 @@
 import torch
 import torch.nn.functional as F
 from torch.nn import Linear, ReLU, LayerNorm, Sequential
+import torch.nn as nn
 from torch_geometric.nn import GINConv, global_sort_pool, SortAggregation
 
 class GIN(torch.nn.Module):
-    def __init__(self, num_features):
+    def __init__(self, input_dim, hidden_dim, dropout=0.1):
         super(GIN, self).__init__()
-        self.conv1 = GINConv(Sequential(Linear(num_features, 128), ReLU(), Linear(128, 128)))
-        self.conv2 = GINConv(Sequential(Linear(128, 64), ReLU(), Linear(64, 64)))
+
+        self.conv1 = GINConv(Sequential(Linear(input_dim, 128), ReLU(), Linear(128, 128)))
+        self.conv2 = GINConv(Sequential(Linear(128, hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim)))
+
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, data):
-        x, edge_index = data.x, data.edge_index.to(torch.int64)
-        x = F.relu(self.conv1(x, edge_index))
-        x = F.relu(self.conv2(x, edge_index))
+        x, edge_index, edge_attr = data.x.float(), data.edge_index.to(torch.int64), data.edge_attr
+
+        #x = torch.eye(400, 400)
+        x = self.conv1(x, edge_index).relu()
+        x = self.dropout(x)
+        x = self.conv2(x, edge_index).relu()
         return x
 
 class SiameseGNN_GIN(torch.nn.Module):
-    def __init__(self, num_features):
+    def __init__(self, top_k, input_dim, dropout, nhidden):
         super(SiameseGNN_GIN, self).__init__()
-        self.gnn = GIN(num_features)
-        self.sort_aggr = SortAggregation(k=50)
+        self.gnn = GIN(input_dim, nhidden, dropout)
+        self.topk_layer = torch.topk
+        self.top_k = top_k
+        self.dropout = nn.Dropout(dropout)
+        self.similarity = nn.PairwiseDistance()
 
-        self.fc1 = Linear(9950, 128)  # Adjust input size according to pooling output
+        self.fc1 = Linear(top_k, 128)  # Adjust input size according to pooling output
         self.norm1 = LayerNorm(128)
         self.relu1 = ReLU()
 
-        self.fc2 = Linear(128, 64)
-        self.norm2 = LayerNorm(64)
+        self.fc2 = Linear(128, nhidden)
+        self.norm2 = LayerNorm(nhidden)
         self.relu2 = ReLU()
 
-        self.fc3 = Linear(64, 1)
+        self.fc3 = Linear(nhidden, 1)
 
     def forward(self, data1, data2):
         out1 = self.gnn(data1)
         out2 = self.gnn(data2)
 
-        out = torch.cdist(out1, out2, p=2)  # Euclidean distance
-        out = self.sort_aggr(out, data1.batch)  # Sort-k pooling layer
-        out = out.view(out.size(0), -1)  # Flatten the pooled output
+        similarity = self.similarity(out1, out2)
+        out, _  = self.topk_layer(similarity, k=self.top_k)
 
-        # Fully Connected Layer 1
+        #Fully Connected Layer 1
         out = self.fc1(out)
         out = self.norm1(out)
         out = self.relu1(out)
+        out = self.dropout(out)
 
-        # Fully Connected Layer 2
+        #Fully Connected Layer 2
         out = self.fc2(out)
         out = self.norm2(out)
         out = self.relu2(out)
+        out = self.dropout(out)
 
         out = self.fc3(out)
         out = torch.sigmoid(out)

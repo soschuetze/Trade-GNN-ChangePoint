@@ -15,13 +15,13 @@ class GNN(torch.nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, data):
-        x, edge_index = torch.from_numpy(data.x).float(), data.edge_index.to(torch.int64)#, data.edge_attr
+        x, edge_index, edge_attr = data.x.float(), data.edge_index.to(torch.int64), data.edge_attr
 
-        x = torch.eye(400, 400)
+        #x = torch.eye(400, 400)
 
-        x = self.conv1(x, edge_index).relu()
+        x = self.conv1(x, edge_index, edge_attr).relu()
         x = self.dropout(x)
-        x = self.conv2(x, edge_index).relu()
+        x = self.conv2(x, edge_index, edge_attr).relu()
         return x
 
 class SiameseGNN(torch.nn.Module):

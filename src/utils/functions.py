@@ -98,7 +98,7 @@ def load_sequence(datapath):
 
 def load_model(model_path: str):
 
-    model = SiameseGNN(30, 400, dropout = 0.1, nhidden=64)
+    model = SiameseGNN(30, 400, dropout = 0.05, nhidden=64)
     model.load_state_dict(torch.load(model_path))
 
     return model

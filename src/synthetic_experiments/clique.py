@@ -17,8 +17,8 @@ from datetime import datetime
 
 def generate_pairs_clique(args=None):
 
-    sbm_1 = {'sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.q], 'q': args.q, "features":args.features}
-    sbm_2 = {'sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.p], 'q': args.q, "features":args.features}
+    sbm_1 = {'type': 'er', 'sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.q], 'q': args.q, "features":args.features}
+    sbm_2 = {'type': 'sbm','sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.p], 'q': args.q, "features":args.features}
 
     data = []
 
@@ -65,10 +65,9 @@ def generate_sequence_clique(args=None):
 
     cp_time = np.random.randint(args.n_samples // 4, 3 * args.n_samples // 4)
     #print(f" Change point at t = {cp_time}")
-
-    sbm_1 = {'sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.q], 'q': args.q, "features":args.features}
-    sbm_2 = {'sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.p], 'q': args.q, "features":args.features}
-
+    num_nodes = args.n_nodes
+    sbm_1 = {'num_nodes':num_nodes, 'type': 'er', 'sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.q], 'q': args.q, "features":args.features}
+    sbm_2 = {'num_nodes':num_nodes, 'type': 'sbm','sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.p], 'q': args.q, "features":args.features}
     g1, g2 = [], []
     for _ in range(cp_time):
         g1.append(sample_pygcn_graph(sbm_1))
@@ -137,7 +136,7 @@ def get_args():
     parser.add_argument('--n_samples', type=int, default=480)
     parser.add_argument('--features', type=str, choices=['gaussian'], default=None)
     parser.add_argument('--sequence', action='store_true', default=True)
-    parser.add_argument('--save_dir', type=str,  default='../../results/synthetic/')
+    parser.add_argument('--save_dir', type=str,  default='results/synthetic/')
     parser.add_argument('--rep', type=int, default=0)
     args = parser.parse_args()
 

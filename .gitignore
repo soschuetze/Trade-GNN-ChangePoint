@@ -8,3 +8,11 @@ feature_dicts
 csv_files
 results
 models
+graph_pairs.pkl
+test_data_indices.pkl
+__pycache__
+test_data.pkl
+train_data_indices.pkl
+train_data.pkl
+val_data_indices.pkl
+val_data.pkl
