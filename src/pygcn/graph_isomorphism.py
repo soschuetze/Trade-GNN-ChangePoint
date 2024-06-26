@@ -2,30 +2,62 @@ import torch
 import torch.nn.functional as F
 from torch.nn import Linear, ReLU, LayerNorm, Sequential
 import torch.nn as nn
-from torch_geometric.nn import GINConv, global_sort_pool, SortAggregation
+from torch_geometric.nn import GINConv, global_sort_pool, SortAggregation, global_mean_pool
 
 class GIN(torch.nn.Module):
-    def __init__(self, input_dim, hidden_dim, dropout=0.1):
+    def __init__(self, num_features, hidden_dim):
         super(GIN, self).__init__()
-
-        self.conv1 = GINConv(Sequential(Linear(input_dim, 128), ReLU(), Linear(128, 128)))
-        self.conv2 = GINConv(Sequential(Linear(128, hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim)))
-
-        self.dropout = nn.Dropout(dropout)
-
+        
+        # Define MLP for GINConv layers
+        self.mlp1 = torch.nn.Sequential(
+            torch.nn.Linear(num_features, hidden_dim),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim, hidden_dim)
+        )
+        
+        self.mlp2 = torch.nn.Sequential(
+            torch.nn.Linear(hidden_dim, hidden_dim),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim, hidden_dim)
+        )
+        
+        self.mlp3 = torch.nn.Sequential(
+            torch.nn.Linear(hidden_dim, hidden_dim),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim, hidden_dim)
+        )
+        
+        # Define GINConv layers
+        self.conv1 = GINConv(self.mlp1)
+        self.conv2 = GINConv(self.mlp2)
+        self.conv3 = GINConv(self.mlp3)
+        
+        # Define a final linear layer for classification
+        self.linear = torch.nn.Linear(hidden_dim, 2)
+    
     def forward(self, data):
-        x, edge_index, edge_attr = data.x.float(), data.edge_index.to(torch.int64), data.edge_attr
-
-        #x = torch.eye(400, 400)
-        x = self.conv1(x, edge_index).relu()
-        x = self.dropout(x)
-        x = self.conv2(x, edge_index).relu()
+        # First GIN layer
+        x, edge_index = data.x.float(), data.edge_index.to(torch.int64)
+        x = self.conv1(x, edge_index)
+        x = F.relu(x)
+        
+        # Second GIN layer
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+        
+        # Third GIN layer
+        x = self.conv3(x, edge_index)
+        x = F.relu(x)
+        
+        # Final linear layer
+        x = self.linear(x)
+        
         return x
 
 class SiameseGNN_GIN(torch.nn.Module):
     def __init__(self, top_k, input_dim, dropout, nhidden):
         super(SiameseGNN_GIN, self).__init__()
-        self.gnn = GIN(input_dim, nhidden, dropout)
+        self.gnn = GIN(input_dim, nhidden)
         self.topk_layer = torch.topk
         self.top_k = top_k
         self.dropout = nn.Dropout(dropout)

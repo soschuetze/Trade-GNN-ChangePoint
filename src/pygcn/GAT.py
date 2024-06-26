@@ -2,14 +2,14 @@ import torch
 import torch.nn.functional as F
 from torch.nn import Linear, ReLU, LayerNorm
 from torch_geometric.nn.aggr import SortAggregation
-from torch_geometric.nn import SAGEConv, global_sort_pool
+from torch_geometric.nn import GATConv, global_sort_pool
 import torch.nn as nn
 
-class GraphSAGE(torch.nn.Module):
+class GAT(torch.nn.Module):
     def __init__(self, input_dim, hidden_dim, dropout=0.1):
-        super(GraphSAGE, self).__init__()
-        self.conv1 = SAGEConv(input_dim, 128)
-        self.conv2 = SAGEConv(128, hidden_dim)
+        super(GAT, self).__init__()
+        self.conv1 = GATConv(input_dim, 128)
+        self.conv2 = GATConv(128, hidden_dim)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, data):
@@ -21,10 +21,10 @@ class GraphSAGE(torch.nn.Module):
         x = self.conv2(x, edge_index).relu()
         return x
 
-class SiameseGNN_GraphSAGE(torch.nn.Module):
+class SiameseGNN_GAT(torch.nn.Module):
     def __init__(self, top_k, input_dim, dropout, nhidden):
-        super(SiameseGNN_GraphSAGE, self).__init__()
-        self.gnn = GraphSAGE(input_dim, nhidden, dropout)
+        super(SiameseGNN_GAT, self).__init__()
+        self.gnn = GAT(input_dim, nhidden, dropout)
         self.topk_layer = torch.topk
         self.top_k = top_k
         self.dropout = nn.Dropout(dropout)
