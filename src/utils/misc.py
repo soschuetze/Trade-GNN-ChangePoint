@@ -5,6 +5,9 @@ from configparser import ConfigParser
 from pathlib import PosixPath
 import json
 from typing import Union
+import torch
+from torch_geometric.data import Data, Batch
+import torch_geometric.utils as pyg_utils
 
 
 def convert_labels_into_changepoints(labels: Union[np.ndarray, list], tolerance=0):
@@ -17,7 +20,6 @@ def convert_labels_into_changepoints(labels: Union[np.ndarray, list], tolerance=
     for i in range(1,tolerance+1):
         cps = (cps + np.concatenate([np.zeros(i), cps[:-i]], axis=0) + np.concatenate([cps[i:], np.zeros(i)], axis=0) > 0)
     return cps
-
 
 def collate(samples):
     """Used to create DGL dataloaders."""

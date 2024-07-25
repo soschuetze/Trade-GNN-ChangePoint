@@ -24,3 +24,4 @@ train_data_nogdp.pkl
 val_data_nogdp.pkl
 graph_pairs_nogdp.pkl
 graphs_nogdp.pkl
+sGNN_pickle_files

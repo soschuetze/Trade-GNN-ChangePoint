@@ -166,6 +166,7 @@ def nxSBM(num_nodes, type, sizes, p, q, features=None, signal_means=None, signal
 
 def nxER(num_nodes, type, sizes, p, q, features=None, signal_means=None, signal_std=1.0):
     n = num_nodes
+    q = 0.5
 
     graph = nx.erdos_renyi_graph(n, q)
 
@@ -243,7 +244,7 @@ def sample_pairs(seq, labels, nsamples=np.Inf, filename=None):
 
 
 
-def sample_pairs_in_window(sequence, labels, window_length=6, n_pairs=None, path=None):
+def sample_pairs_in_window(sequence, labels, window_length=10, n_pairs=None, path=None):
     """
     Sample all or a subsample of pairs of graphs in a sequence using a sliding window
 
@@ -280,4 +281,3 @@ def sample_pairs_in_window(sequence, labels, window_length=6, n_pairs=None, path
             pickle.dump(pairs, f)
 
     return pairs
-

@@ -129,11 +129,11 @@ def detect_change_point(args=None):
 def get_args():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test_data', type=str, default='results/test_synthetic/', help='Path to dynamic network data.')
+    parser.add_argument('--test_data', type=str, default='results/', help='Path to dynamic network data.')
     parser.add_argument('--single', action='store_true', default=False)
     #parser.add_argument('--features', type=str, default='identity', help='Positional features to add if no node attributes in the data.')
-    parser.add_argument('--model_path', type=str, default='models/sgnn-topk30-64hidden-20clique.pt', help='Path to model for detecting change-points.')
-    parser.add_argument('--save_dir', type=str, default='results/test_results/50s/', help='Name of folder where to store results')
+    parser.add_argument('--model_path', type=str, default='models/real_data/mis_logged_with_gdp.pt', help='Path to model for detecting change-points.')
+    parser.add_argument('--save_dir', type=str, default='results/test_results/', help='Name of folder where to store results')
     parser.add_argument('--window_length', type=int, default=2, help='Length of backward window')
     parser.add_argument('--threshold', type=float, default=0.5, help='Threshold on the similarity statistic to detect change-points')
     parser.add_argument('--cuda', type=int, default=None, choices=[0, 1, 2, 3], help='GPU id')

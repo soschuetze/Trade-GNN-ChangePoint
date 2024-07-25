@@ -232,7 +232,6 @@ def binary_metrics_adj(
 
     # transform array to list of time series
     if isinstance(score, np.ndarray):
-        
         assert score.shape == target.shape
 
         if score.ndim == 1:

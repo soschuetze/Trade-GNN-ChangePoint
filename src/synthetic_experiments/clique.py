@@ -17,8 +17,8 @@ from datetime import datetime
 
 def generate_pairs_clique(args=None):
 
-    sbm_1 = {'type': 'er', 'sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.q], 'q': args.q, "features":args.features}
-    sbm_2 = {'type': 'sbm','sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.p], 'q': args.q, "features":args.features}
+    sbm_1 = {'type': 'er', 'sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.p, args.p], 'q': args.q, "features":args.features}
+    sbm_2 = {'type': 'sbm','sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.p, args.p], 'q': args.q, "features":args.features}
 
     data = []
 
@@ -66,8 +66,8 @@ def generate_sequence_clique(args=None):
     cp_time = np.random.randint(args.n_samples // 4, 3 * args.n_samples // 4)
     #print(f" Change point at t = {cp_time}")
     num_nodes = args.n_nodes
-    sbm_1 = {'num_nodes':num_nodes, 'type': 'er', 'sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.q], 'q': args.q, "features":args.features}
-    sbm_2 = {'num_nodes':num_nodes, 'type': 'sbm','sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.q, args.p], 'q': args.q, "features":args.features}
+    sbm_1 = {'num_nodes':num_nodes, 'type': 'er', 'sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.p, args.p], 'q': args.q, "features":args.features}
+    sbm_2 = {'num_nodes':num_nodes, 'type': 'sbm','sizes': [args.n_nodes - args.size_clique, args.size_clique], 'p': [args.p, args.p], 'q': args.q, "features":args.features}
     g1, g2 = [], []
     for _ in range(cp_time):
         g1.append(sample_pygcn_graph(sbm_1))
@@ -130,7 +130,7 @@ def get_args():
 
     parser.add_argument('--n_nodes', type=int, default=400)
     parser.add_argument('--n_changes', type=int, default=5)
-    parser.add_argument('--size_clique', type=int, default=20)
+    parser.add_argument('--size_clique', type=int, default=80)
     parser.add_argument('--p', type=float, default=0.08)
     parser.add_argument('--q', type=float, default=0.02)
     parser.add_argument('--n_samples', type=int, default=480)

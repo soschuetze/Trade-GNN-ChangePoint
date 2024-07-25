@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 import pickle
 import os
 from src.pygcn.SiameseGNN import SiameseGNN
+from src.pygcn.GraphSAGE import SiameseGNN_GraphSAGE
 from src.utils.misc import collate, get_device
 
 
@@ -81,13 +82,13 @@ def load_sequence(datapath):
         time = None
         labels = None
     else:
-        with open(datapath + '/20-data.p', 'rb') as f:
+        with open(datapath + '/mis-logged-gdp-data.p', 'rb') as f:
             data = pickle.load(f)
 
-        with open(datapath + '/20-labels.p', 'rb') as f:
+        with open(datapath + '/mis-logged-gdp-labels.p', 'rb') as f:
             labels = pickle.load(f)
 
-        with open(datapath + '/20-time.json') as f:
+        with open(datapath + '/times.json') as f:
             time = json.load(f)
 
     print(f"Data loaded: sequence of {len(data)} graphs with a change point at time {time}")
@@ -98,7 +99,7 @@ def load_sequence(datapath):
 
 def load_model(model_path: str):
 
-    model = SiameseGNN(30, 400, dropout = 0.05, nhidden=64)
+    model = SiameseGNN_GraphSAGE(50, 27, dropout = 0.05, nhidden=16)
     model.load_state_dict(torch.load(model_path))
 
     return model
