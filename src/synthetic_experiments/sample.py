@@ -193,7 +193,7 @@ def sample_pygcn_graph(sbm_args):
 def sample_pairs(seq, labels, nsamples=np.Inf, filename=None):
     """
     Samples pairs of graphs with labels (0=dissimilar, 1=similar) from a sequence of graphs
-    :param seq: list of DGL graphs
+    :param seq: list of torch geometric graphs
     :param labels: array of labels of each graph indicating their generative distribution
     :param nsamples: number of pairs to sample
     :param filename: if None do not save the pairs

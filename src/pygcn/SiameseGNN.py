@@ -1,27 +1,25 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch_geometric.nn import GCNConv, global_sort_pool
+from torch_geometric.nn import GCNConv, SAGEConv, global_sort_pool
 from torch_geometric.nn.aggr import SortAggregation
-from torch.nn import Linear, LayerNorm, ReLU, Sigmoid
+from torch.nn import Linear, LayerNorm, ReLU, Sigmoid, BatchNorm1d
 from tqdm import tqdm
 from torch.optim.lr_scheduler import StepLR
 
 class GNN(torch.nn.Module):
     def __init__(self, input_dim, hidden_dim, dropout=0.1):
         super(GNN, self).__init__()
-        self.conv1 = GCNConv(input_dim, 128)
-        self.conv2 = GCNConv(128, hidden_dim)
+        self.conv1 = SAGEConv(input_dim, 128)
+        self.conv2 = SAGEConv(128, hidden_dim)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, data):
-        x, edge_index, edge_attr = data.x.float(), data.edge_index.to(torch.int64), data.edge_attr
+        x, edge_index = data.x, data.edge_index
 
-        #x = torch.eye(400, 400)
-
-        x = self.conv1(x, edge_index, edge_attr).relu()
+        x = self.conv1(x, edge_index).relu()
         x = self.dropout(x)
-        x = self.conv2(x, edge_index, edge_attr).relu()
+        x = self.conv2(x, edge_index).relu()
         return x
 
 class SiameseGNN(torch.nn.Module):
@@ -34,11 +32,11 @@ class SiameseGNN(torch.nn.Module):
         self.similarity = nn.PairwiseDistance()
 
         self.fc1 = Linear(top_k, 128)  # Adjust input size according to pooling output
-        self.norm1 = LayerNorm(128)
+        self.norm1 = BatchNorm1d(128)
         self.relu1 = ReLU()
 
         self.fc2 = Linear(128, nhidden)
-        self.norm2 = LayerNorm(nhidden)
+        self.norm2 = BatchNorm1d(nhidden)
         self.relu2 = ReLU()
 
         self.fc3 = Linear(nhidden, 1)

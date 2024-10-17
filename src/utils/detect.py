@@ -7,11 +7,11 @@ import argparse
 from datetime import datetime
 from pathlib import PosixPath
 import os
-from src.utils.functions import load_model, load_sequence, prepare_batches
-from src.utils.misc import convert_labels_into_changepoints, NpEncoder, get_device
-from src.utils.metrics import adjust_predicts_donut, binary_metrics_adj, compute_ari
+from functions import load_model, load_sequence, prepare_batches
+from misc import convert_labels_into_changepoints, NpEncoder, get_device
+from metrics import adjust_predicts_donut, binary_metrics_adj, compute_ari
 import ruptures as rpt
-
+from model import GraphSiamese
 
 def compute_sgnn_similarity(model, sequence, window_length):
     """
@@ -23,18 +23,19 @@ def compute_sgnn_similarity(model, sequence, window_length):
     """
 
     batches = prepare_batches(sequence, window_length=window_length)
+    device = get_device()
+    model = model.to(device)
     avg_sim = [] # average similarity metric
     idx = [] # indices of times at which the average similarity is computed
 
     with torch.no_grad():
-        for (graph1_batch, graph2_batch, i) in batches: # each batch contains a L similarity score within a window
-            pred = 0
-            for graph1, graph2 in zip(graph1_batch, graph2_batch):
-                
-                pred +=  model(graph1, graph2).item()
+        for (graph1, graph2, i) in batches: # each batch contains a L similarity score within a window
 
-            avg_sim.append(pred/len(graph1_batch))
-            idx.append(i[1].item())
+            graph1, graph2 = graph1.to(device), graph2.to(device)
+            pred =  torch.sigmoid(model(graph1, graph2)).detach().cpu().mean().item()
+            
+            avg_sim.append(pred)
+            idx.append(i[0].item())
 
     return np.array(avg_sim), np.array(idx)
 
@@ -129,15 +130,15 @@ def detect_change_point(args=None):
 def get_args():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test_data', type=str, default='results/', help='Path to dynamic network data.')
+    parser.add_argument('--test_data', type=str, default='../../results/test_synthetic/test', help='Path to dynamic network data.')
     parser.add_argument('--single', action='store_true', default=False)
     #parser.add_argument('--features', type=str, default='identity', help='Positional features to add if no node attributes in the data.')
-    parser.add_argument('--model_path', type=str, default='models/real_data/mis_logged_with_gdp.pt', help='Path to model for detecting change-points.')
-    parser.add_argument('--save_dir', type=str, default='results/test_results/', help='Name of folder where to store results')
-    parser.add_argument('--window_length', type=int, default=2, help='Length of backward window')
+    parser.add_argument('--model_path', type=str, default='../../synthetic/trained_models/s_70_k_30/', help='Path to model for detecting change-points.')
+    parser.add_argument('--save_dir', type=str, default='../../results/test_results/', help='Name of folder where to store results')
+    parser.add_argument('--window_length', type=int, default=6, help='Length of backward window')
     parser.add_argument('--threshold', type=float, default=0.5, help='Threshold on the similarity statistic to detect change-points')
     parser.add_argument('--cuda', type=int, default=None, choices=[0, 1, 2, 3], help='GPU id')
-    parser.add_argument('--tolerance', type=int, default=3, help='Tolerance level in the adjusted F1 metric')
+    parser.add_argument('--tolerance', type=int, default=5, help='Tolerance level in the adjusted F1 metric')
     parser.add_argument('--task', type=str, default='detection', choices=['detection', 'statistic'])
 
     args = parser.parse_args()

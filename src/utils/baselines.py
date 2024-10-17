@@ -9,7 +9,7 @@ import scipy.sparse as ss
 from src.utils.graphs import laplacian_embeddings, laplacian, norm_laplacian
 from src.utils.distances import SubspaceDistance, DeltaConDistance, WL_distance, distance_frobenius, distance_procrustes_LE
 from src.utils.metrics import find_best_threshold, adjust_predicts_donut, binary_metrics_adj, compute_ari
-from src.utils.functions import dist_labels_to_changepoint_labels, normalise_statistics
+from utils.functions import dist_labels_to_changepoint_labels, normalise_statistics
 from tqdm import tqdm
 import scipy
 from sklearn.cluster import KMeans

@@ -1,15 +1,17 @@
 import numpy as np
 import networkx as nx
 import torch
-from src.utils.graphs import laplacian_embeddings, random_walk_embeddings, degree_matrix
+from graphs import laplacian_embeddings, random_walk_embeddings, degree_matrix
 from typing import Union
 import json
 from torch.utils.data import DataLoader
 import pickle
 import os
-from src.pygcn.SiameseGNN import SiameseGNN
-from src.pygcn.GraphSAGE import SiameseGNN_GraphSAGE
-from src.utils.misc import collate, get_device
+from misc import collate, get_device
+from torch_geometric.data import Batch
+import torch
+from model import GraphSiamese
+from embedding import GCN
 
 
 def dist_labels_to_changepoint_labels(labels: Union[np.ndarray, list]):
@@ -63,6 +65,24 @@ def normalise_statistics(statistics):
     return norm_stat
 
 
+def collate_graph_pairs(batch):
+    # Unpack the batch (a list of (graph1, graph2, label) tuples)
+    graph1_list, graph2_list, label_list = [], [], []
+    
+    for graph1, graph2, label in batch:
+        graph1_list.append(graph1)
+        graph2_list.append(graph2)
+        label_list.append(label)
+    
+    # Use torch_geometric's Batch to batch the graphs independently
+    batch_graph1 = Batch.from_data_list(graph1_list)
+    batch_graph2 = Batch.from_data_list(graph2_list)
+    
+    # Convert labels into a tensor
+    labels = torch.tensor(label_list)
+    
+    return batch_graph1, batch_graph2, labels
+
 def prepare_batches(data, window_length):
 
     tuples = []
@@ -70,8 +90,10 @@ def prepare_batches(data, window_length):
     for i in range(window_length, len(data)):
         for j in range(1, window_length+1):
             tuples.append((data[i], data[i-j], i))
-    batched_data = DataLoader(tuples, batch_size=window_length, shuffle=False, collate_fn=collate,
+
+    batched_data = DataLoader(tuples, batch_size=window_length, shuffle=False, collate_fn=collate_graph_pairs,
                                drop_last=False)
+    
 
     return  batched_data
 
@@ -82,13 +104,13 @@ def load_sequence(datapath):
         time = None
         labels = None
     else:
-        with open(datapath + '/mis-logged-gdp-data.p', 'rb') as f:
+        with open(datapath + '/70-data.p', 'rb') as f:
             data = pickle.load(f)
 
-        with open(datapath + '/mis-logged-gdp-labels.p', 'rb') as f:
+        with open(datapath + '/70-labels.p', 'rb') as f:
             labels = pickle.load(f)
 
-        with open(datapath + '/times.json') as f:
+        with open(datapath + '/70-time.json') as f:
             time = json.load(f)
 
     print(f"Data loaded: sequence of {len(data)} graphs with a change point at time {time}")
@@ -99,8 +121,13 @@ def load_sequence(datapath):
 
 def load_model(model_path: str):
 
-    model = SiameseGNN_GraphSAGE(50, 27, dropout = 0.05, nhidden=16)
-    model.load_state_dict(torch.load(model_path))
+    embedding = embedding = GCN(input_dim=2400, type='gcn', hidden_dim=16, layers=3, dropout=0.1)
+    model = GraphSiamese(embedding, 'euclidean', 'topk', 'bce', 30, nlinear=2,
+                         nhidden=16, dropout=0.1, features=None)
+    model.load_state_dict(torch.load(model_path + '/model.pt', map_location='cpu'))
+    
+    model.eval()
+    print("Model loaded")
 
     return model
 

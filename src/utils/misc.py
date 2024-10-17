@@ -8,6 +8,8 @@ from typing import Union
 import torch
 from torch_geometric.data import Data, Batch
 import torch_geometric.utils as pyg_utils
+from torch_geometric.data import Batch
+from torch_geometric.utils import add_self_loops
 
 
 def convert_labels_into_changepoints(labels: Union[np.ndarray, list], tolerance=0):
@@ -21,10 +23,14 @@ def convert_labels_into_changepoints(labels: Union[np.ndarray, list], tolerance=
         cps = (cps + np.concatenate([np.zeros(i), cps[:-i]], axis=0) + np.concatenate([cps[i:], np.zeros(i)], axis=0) > 0)
     return cps
 
-def collate(samples):
-    """Used to create DGL dataloaders."""
+def collate(samples, add_selfloops=True):
+    """Used to create PyG dataloaders."""
     graphs1, graphs2, labels = map(list, zip(*samples))
-
+    if add_selfloops:
+        graphs1 = [add_self_loops(graph.edge_index)[0] for graph in graphs1]
+        graphs2 = [add_self_loops(graph.edge_index)[0] for graph in graphs2]
+    graphs1 = Batch.from_data_list(graphs1)
+    graphs2 = Batch.from_data_list(graphs2)
     return graphs1, graphs2, torch.tensor(labels)
 
 

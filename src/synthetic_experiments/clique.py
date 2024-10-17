@@ -130,7 +130,7 @@ def get_args():
 
     parser.add_argument('--n_nodes', type=int, default=400)
     parser.add_argument('--n_changes', type=int, default=5)
-    parser.add_argument('--size_clique', type=int, default=80)
+    parser.add_argument('--size_clique', type=int, default=20)
     parser.add_argument('--p', type=float, default=0.08)
     parser.add_argument('--q', type=float, default=0.02)
     parser.add_argument('--n_samples', type=int, default=480)
