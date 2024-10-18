@@ -133,7 +133,7 @@ def get_args():
     parser.add_argument('--test_data', type=str, default='../../results/test_synthetic/test', help='Path to dynamic network data.')
     parser.add_argument('--single', action='store_true', default=False)
     #parser.add_argument('--features', type=str, default='identity', help='Positional features to add if no node attributes in the data.')
-    parser.add_argument('--model_path', type=str, default='../../synthetic/trained_models/s_70_k_30/', help='Path to model for detecting change-points.')
+    parser.add_argument('--model_path', type=str, default='../../synthetic/trained_models/s_50_k_100', help='Path to model for detecting change-points.')
     parser.add_argument('--save_dir', type=str, default='../../results/test_results/', help='Name of folder where to store results')
     parser.add_argument('--window_length', type=int, default=6, help='Length of backward window')
     parser.add_argument('--threshold', type=float, default=0.5, help='Threshold on the similarity statistic to detect change-points')
