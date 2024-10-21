@@ -6,8 +6,6 @@ from pathlib import PosixPath
 import json
 from typing import Union
 import torch
-from torch_geometric.data import Data, Batch
-import torch_geometric.utils as pyg_utils
 from torch_geometric.data import Batch
 from torch_geometric.utils import add_self_loops
 

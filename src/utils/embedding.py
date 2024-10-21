@@ -73,12 +73,13 @@ class MLP(nn.Module):
 
 class GCN(nn.Module):
 
-    def __init__(self, input_dim, type='gcn', hidden_dim=16, layers=3, dropout=0.1, **kwargs):
+    def __init__(self, input_dim, type='gcn', hidden_dim=16, layers=3, dropout=0.1, identity=True, **kwargs):
         super(GCN, self).__init__()
         self.type = type
         self.dropout = nn.Dropout(dropout)
         self.nlayers = layers
         self.input_dim = input_dim
+        self.identity = identity
 
         if type == 'gcn':
             self.layer0 = GCNConv(input_dim, hidden_dim)
@@ -106,11 +107,12 @@ class GCN(nn.Module):
                                 GATConv(hidden_dim, hidden_dim, heads=1, concat=False))
 
     def forward(self, data):
-        x, edge_index = data.x, data.edge_index
-        x = torch.from_numpy(np.eye(400*len(x))).float()
-        
-        if self.type == 'identity':
-            return x
+        x, edge_index = data.x, data.edge_index.to(torch.int64)
+
+        if self.identity:
+            x = torch.from_numpy(np.eye(400*len(x))).float()
+        else:
+            x = torch.from_numpy(np.vstack(x)).float()
 
         for i in range(self.nlayers-1):
             x = torch.relu(self._modules['layer{}'.format(i)](x, edge_index))

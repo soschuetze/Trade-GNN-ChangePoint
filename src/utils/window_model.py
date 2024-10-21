@@ -3,14 +3,15 @@ import torch.nn as nn
 import networkx as nx
 import numpy as np
 import os
-import pickle
+import pickle as pkl
 import argparse
 from datetime import datetime
 import pandas as pd
 from pathlib import Path, PosixPath
+from CreateFeatures import CreateFeatures
 import json
+from functions import dist_labels_to_changepoint_labels, dist_labels_to_changepoint_labels_adjusted
 from torch_geometric.data import DataLoader
-from torch_geometric.utils import to_networkx
 from tqdm import tqdm
 import torch.optim as optim
 from sklearn.metrics import recall_score, precision_score, balanced_accuracy_score, roc_auc_score, f1_score
@@ -23,23 +24,22 @@ from embedding import GCN
 def train(args=None):
 
     args_dict = vars(args)
-
+    
     topk = args_dict['top_k']
-    s = args_dict['clique_size']
     batch_size = args_dict['batch_size']
 
-    with open(f'../../synthetic/graph_pairs/graph_pairs_train_{s}.p', 'rb') as f:
-        graph_pairs_train = pickle.load(f)
-    with open(f'../../synthetic/graph_pairs/graph_pairs_val_{s}.p', 'rb') as f:
-        graph_pairs_val = pickle.load(f)
-    
-    training_data_pairs = DataLoader(graph_pairs_train, batch_size=batch_size, shuffle=True, collate_fn=collate,
-                               drop_last=True)
-    validation_data_pairs = DataLoader(graph_pairs_val, batch_size=batch_size, shuffle=True, collate_fn=collate,
-                               drop_last=True)
+    with open("../../window/graph_pairs/graph_pairs_train.pkl", "rb") as f:         
+        graph_pairs_train = pkl.load(f)
+    with open("../../window/graph_pairs/graph_pairs_test.pkl", "rb") as f:         
+        graph_pairs_test = pkl.load(f)
+    with open("../../window/graph_pairs/graph_pairs_val.pkl", "rb") as f:         
+        graph_pairs_val = pkl.load(f)
 
-    input_dim = training_data_pairs.dataset[0][0].x.shape[1]*batch_size
-    embedding = GCN(input_dim=input_dim, type='gcn', hidden_dim=16, layers=args_dict['nlayers'], dropout=args_dict['dropout'])
+    training_data_pairs = DataLoader(graph_pairs_train, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn = collate)
+    validation_data_pairs = DataLoader(graph_pairs_val, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn = collate)
+
+    input_dim = training_data_pairs.dataset[0][0].x.shape[1]
+    embedding = GCN(input_dim=input_dim, type='gcn', hidden_dim=16, layers=args_dict['nlayers'], dropout=args_dict['dropout'], identity=False)
     model = GraphSiamese(embedding, args_dict['distance'], args_dict['pooling'], args_dict['loss'], topk, nlinear=args_dict['nlayers_mlp'],
                             nhidden=16, dropout=args_dict['dropout'], features=None)
     
@@ -69,7 +69,6 @@ def train(args=None):
         for (graph1, graph2, labels) in training_data_pairs:
             
             graph1, graph2, labels = graph1, graph2, labels
-
             predictions = model(graph1, graph2)
             predictions = torch.sigmoid(predictions) # predictions between 0 and 1
 
@@ -107,7 +106,6 @@ def train(args=None):
                 graph1, graph2 = graph1, graph2
 
                 predictions = model(graph1, graph2)
-
                 predictions = torch.sigmoid(predictions)
 
                 loss = loss_fn(predictions, labels.float())
@@ -155,9 +153,9 @@ def train(args=None):
                     valid_acc)
             print("Patience counter : ", patience_counter)
 
-    model_path = (f's_{s}_k_{topk}')
+    model_path = (f'window_model_mis_norm')
 
-    save_dir = PosixPath('../../synthetic/trained_models/').expanduser() / model_path
+    save_dir = PosixPath('../../window/trained_models/').expanduser() / model_path
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
 
@@ -173,7 +171,6 @@ def train(args=None):
 def get_args():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--clique_size', type=int, default=60)
     parser.add_argument('--training_data', type=str, default=None)
     parser.add_argument('--validation_data', type=str, default=None)
     parser.add_argument('--test_data', type=str, default=None)

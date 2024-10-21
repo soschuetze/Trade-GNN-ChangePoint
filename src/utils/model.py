@@ -33,12 +33,14 @@ class GraphSiamese(nn.Module):
         graph1_encoding = self.embedding(data1)
         graph2_encoding = self.embedding(data2)
 
+        num_nodes = data1.num_nodes
+
         if self.pooling == 'avgraph':  
             graph1_encoding = self.pooling_layer(graph1_encoding, data1.batch)
             graph2_encoding = self.pooling_layer(graph2_encoding, data2.batch)
 
         similarity = self.similarity(graph1_encoding.squeeze(), graph2_encoding.squeeze()).unsqueeze(1)
-        similarity = similarity.view(6, 400)
+        similarity = similarity.view(6, 199)
 
         x, top_indices = torch.topk(similarity, self.top_k, dim=1)
 
