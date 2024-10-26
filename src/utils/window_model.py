@@ -39,9 +39,9 @@ def train(args=None):
     validation_data_pairs = DataLoader(graph_pairs_val, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn = collate)
 
     input_dim = training_data_pairs.dataset[0][0].x.shape[1]
-    embedding = GCN(input_dim=input_dim, type='gcn', hidden_dim=16, layers=args_dict['nlayers'], dropout=args_dict['dropout'], identity=False)
+    embedding = GCN(input_dim=input_dim, type='sage', hidden_dim=args_dict['hidden'], layers=args_dict['nlayers'], dropout=args_dict['dropout'], identity=False)
     model = GraphSiamese(embedding, args_dict['distance'], args_dict['pooling'], args_dict['loss'], topk, nlinear=args_dict['nlayers_mlp'],
-                            nhidden=16, dropout=args_dict['dropout'], features=None)
+                            nhidden=args_dict['hidden'], dropout=args_dict['dropout'], features=None)
     
     optimizer = optim.Adam(model.parameters(), lr=args_dict['lr'], weight_decay=5e-4)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1)
@@ -180,7 +180,7 @@ def get_args():
     parser.add_argument('--n_pairs', type=int, default=5000)
     parser.add_argument('--pair_sampling', type=str, default='random', choices=['random', 'window'])
     parser.add_argument('--window_length', type=int, default=10)
-    parser.add_argument('--batch_size', type=int, default=6, help='Batch size during training.')
+    parser.add_argument('--batch_size', type=int, default=8, help='Batch size during training.')
     parser.add_argument('--embedding_module', type=str, default='gcn', choices=['identity', 'gcn', 'gin', 'gat'],
                         help='Model to use for the node embedding.')
     parser.add_argument('--nlayers', type=int, default=3, help='Number of layers of the graph encoder.')

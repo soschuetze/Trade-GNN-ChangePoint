@@ -33,18 +33,30 @@ class GraphSiamese(nn.Module):
         graph1_encoding = self.embedding(data1)
         graph2_encoding = self.embedding(data2)
 
-        num_nodes = data1.num_nodes
-
-        if self.pooling == 'avgraph':  
-            graph1_encoding = self.pooling_layer(graph1_encoding, data1.batch)
-            graph2_encoding = self.pooling_layer(graph2_encoding, data2.batch)
-
         similarity = self.similarity(graph1_encoding.squeeze(), graph2_encoding.squeeze()).unsqueeze(1)
-        similarity = similarity.view(6, 199)
 
-        x, top_indices = torch.topk(similarity, self.top_k, dim=1)
+        batch_indices = data1.batch.unique()
 
-        x = x.squeeze()
+        # Initialize lists to store top-k values and indices
+        top_values_list = []
+
+        # Iterate over each batch index
+        for batch_idx in batch_indices:
+            # Get the mask for the current batch
+            batch_mask = (data1.batch == batch_idx).nonzero(as_tuple=True)[0]
+            
+            # Get the similarity scores for the current batch
+            batch_similarity = similarity[batch_mask]
+            
+            # Get the top-k values and indices for the current batch
+            top_values, top_indices = torch.topk(batch_similarity, self.top_k, dim=0)
+            # Store the results
+            top_values_list.append(top_values)
+
+        # Concatenate the results
+        top_values = torch.cat(top_values_list, dim=1).t()
+
+        x = top_values
         if self.nlinear == 0:  
             x = torch.nn.AvgPool1d(x)
         else:  

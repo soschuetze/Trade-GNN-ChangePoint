@@ -38,7 +38,8 @@ class MLP(nn.Module):
         self.linear_or_not = True  # default is linear model
         self.num_layers = num_layers
         self.output_dim = output_dim
-        self.dropout = nn.Dropout(dropout)
+        self.training = True
+        self.dropout = dropout
 
         if num_layers < 1:
             raise ValueError("number of layers should be positive!")
@@ -68,7 +69,7 @@ class MLP(nn.Module):
             h = x
             for i in range(self.num_layers - 1):
                 h = F.relu(self.batch_norms[i](self.linears[i](h)))
-                h = self.dropout(h)
+                h = F.dropout(h, training=self.training, p = self.dropout)
             return self.linears[-1](h)
 
 class GCN(nn.Module):
@@ -76,10 +77,10 @@ class GCN(nn.Module):
     def __init__(self, input_dim, type='gcn', hidden_dim=16, layers=3, dropout=0.1, identity=True, **kwargs):
         super(GCN, self).__init__()
         self.type = type
-        self.dropout = nn.Dropout(dropout)
         self.nlayers = layers
         self.input_dim = input_dim
         self.identity = identity
+        self.dropout = dropout
 
         if type == 'gcn':
             self.layer0 = GCNConv(input_dim, hidden_dim)
@@ -116,7 +117,7 @@ class GCN(nn.Module):
 
         for i in range(self.nlayers-1):
             x = torch.relu(self._modules['layer{}'.format(i)](x, edge_index))
-            x = self.dropout(x)
+            x = F.dropout(x, training=True, p = self.dropout)
         x = self._modules['layer{}'.format(self.nlayers-1)](x, edge_index)
 
         return x

@@ -104,13 +104,13 @@ def load_sequence(datapath):
         time = None
         labels = None
     else:
-        with open(datapath + '/30-data.p', 'rb') as f:
+        with open(datapath + '/window-graphs.p', 'rb') as f:
             data = pickle.load(f)
 
-        with open(datapath + '/30-labels.p', 'rb') as f:
+        with open(datapath + '/window-labels.p', 'rb') as f:
             labels = pickle.load(f)
 
-        with open(datapath + '/30-time.json') as f:
+        with open(datapath + '/window-time.json', 'r') as f:
             time = json.load(f)
 
     print(f"Data loaded: sequence of {len(data)} graphs with a change point at time {time}")
@@ -121,9 +121,9 @@ def load_sequence(datapath):
 
 def load_model(model_path: str):
 
-    embedding = embedding = GCN(input_dim=2400, type='gcn', hidden_dim=16, layers=3, dropout=0.1, identity=True)
-    model = GraphSiamese(embedding, 'euclidean', 'topk', 'bce', 50, nlinear=2,
-                         nhidden=16, dropout=0.1, features=None)
+    embedding = embedding = GCN(input_dim=27, type='sage', hidden_dim=32, layers=3, dropout=0.2, identity=False)
+    model = GraphSiamese(embedding, 'euclidean', 'topk', 'bce', 40, nlinear=2,
+                         nhidden=32, dropout=0.2, features=None)
     model.load_state_dict(torch.load(model_path + '/model.pt', map_location='cpu'))
     
     model.eval()

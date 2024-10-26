@@ -3,6 +3,7 @@ import pickle as pkl
 from CreateFeatures import CreateFeatures
 from functions import dist_labels_to_changepoint_labels
 from sample import sample_pairs
+import json
 
 def add_features(years, graphs, feat_dict, dim):
 
@@ -76,7 +77,6 @@ def get_window_graph_pairs():
     test_graphs = all_graphs[45:]
     
     crisis_years = [1962, 1967, 1973, 1978, 1981, 1989, 1993, 1996, 2002, 2007, 2012, 2014, 2016]
-    
     phases = []
     p = -1
     for i in range(1962,2019):
@@ -85,6 +85,14 @@ def get_window_graph_pairs():
         phases.append(p)
 
     labels = dist_labels_to_changepoint_labels(phases)
+
+    time_test = [t-2007 for t in crisis_years if t>=2007]
+    with open("../../results/test_window/window-graphs.p", "wb") as f:         
+        pkl.dump(test_graphs, f)
+    with open("../../results/test_window/window-labels.p", "wb") as f:         
+        pkl.dump(labels[45:], f)
+    with open("../../results/test_window/window-time.json", "w") as f:         
+        json.dump(time_test, f)
 
     graph_pairs_train = sample_pairs(train_graphs,labels[:34])
     graph_pairs_val = sample_pairs(val_graphs,labels[34:45])
