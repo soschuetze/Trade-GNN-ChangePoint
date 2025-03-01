@@ -17,9 +17,9 @@ import torch.optim as optim
 from sklearn.metrics import recall_score, precision_score, balanced_accuracy_score, roc_auc_score, f1_score
 
 from sample import sample_pairs
-from misc import collate
-from model import GraphSiamese
-from embedding import GCN
+from utils.misc import collate
+from utils.model import GraphSiamese
+from utils.embedding import GCN
 
 def train(args=None):
 
