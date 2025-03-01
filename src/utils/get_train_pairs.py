@@ -23,7 +23,7 @@ def create_graphs_with_features(all_graphs, args):
     labels = dist_labels_to_changepoint_labels(phases)
     graph_pairs = sample_pairs(all_graphs,labels)
 
-    with open(args.save_dir, 'wb') as f:
+    with open(f"{args.save_dir}/graph_pairs_{args.gdp}_{args.feature_type}", 'wb') as f:
         pkl.dump(graph_pairs, f)
 
     train_indices, test_indices = train_test_split(np.arange(len(graph_pairs)), test_size=0.40, random_state=42)
@@ -53,23 +53,15 @@ def create_graphs_with_features(all_graphs, args):
 
     random.shuffle(balanced_data)
 
-    with open(f'train_data_{args.gdp}_{args.feature_type}.pkl', 'wb') as f:
+    with open(f'{args.save_dir}/train_data_{args.gdp}_{args.feature_type}.pkl', 'wb') as f:
         pkl.dump(balanced_data, f)
 
-    with open(f'val_data_{args.gdp}_{args.feature_type}.pkl', 'wb') as f:
+    with open(f'{args.save_dir}/val_data_{args.gdp}_{args.feature_type}.pkl', 'wb') as f:
         pkl.dump(graph_pairs_val, f)
         
-    with open(f'test_data_{args.gdp}_{args.feature_type}.pkl', 'wb') as f:
+    with open(f'{args.save_dir}/test_data_{args.gdp}_{args.feature_type}.pkl', 'wb') as f:
         pkl.dump(graph_pairs_test, f)
 
-    with open(f'train_data_indices_{args.gdp}_{args.feature_type}.pkl', 'wb') as f:
-        pkl.dump(train_indices, f)
-
-    with open(f'val_data_indices_{args.gdp}_{args.feature_type}.pkl', 'wb') as f:
-        pkl.dump(val_indices, f)
-        
-    with open(f'test_data_indices_{args.gdp}_{args.feature_type}.pkl', 'wb') as f:
-        pkl.dump(test_indices, f)
 
 def add_features(args):
 
@@ -146,10 +138,10 @@ def add_features(args):
 def get_args():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--graph_dir', type=str, default='graphs_nogdp.pkl', help='Name of folder where to store results')
-    parser.add_argument('--save_dir', type=str, default='graph_pairs_nogdp', help='Name of folder where to store results')
-    parser.add_argument('--gdp', type=str, default='nogdp', help='Name of folder where to store results')
-    parser.add_argument('--feature_type', type=str, default='mis_features_not_norm', help='Name of folder where to store results')
+    parser.add_argument('--graph_dir', type=str, default='../pygcn/graphs_nogdp.pkl', help='Name of folder with initial graphs')
+    parser.add_argument('--save_dir', type=str, default='../../sGNN_pickle_files/nogdp_randnorm', help='Name of folder where to store results')
+    parser.add_argument('--gdp', type=str, default='nogdp', help='Whether GDP is included')
+    parser.add_argument('--feature_type', type=str, default='rand_norm', help='Types of features to be added')
 
     args = parser.parse_args()
     

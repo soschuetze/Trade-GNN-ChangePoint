@@ -21,16 +21,9 @@ class GIN(torch.nn.Module):
             torch.nn.Linear(hidden_dim, hidden_dim)
         )
         
-        self.mlp3 = torch.nn.Sequential(
-            torch.nn.Linear(hidden_dim, hidden_dim),
-            torch.nn.ReLU(),
-            torch.nn.Linear(hidden_dim, hidden_dim)
-        )
-        
         # Define GINConv layers
         self.conv1 = GINConv(self.mlp1)
         self.conv2 = GINConv(self.mlp2)
-        self.conv3 = GINConv(self.mlp3)
         
         # Define a final linear layer for classification
         self.linear = torch.nn.Linear(hidden_dim, 2)
@@ -43,10 +36,6 @@ class GIN(torch.nn.Module):
         
         # Second GIN layer
         x = self.conv2(x, edge_index)
-        x = F.relu(x)
-        
-        # Third GIN layer
-        x = self.conv3(x, edge_index)
         x = F.relu(x)
         
         # Final linear layer
@@ -63,11 +52,11 @@ class SiameseGNN_GIN(torch.nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.similarity = nn.PairwiseDistance()
 
-        self.fc1 = Linear(top_k, 128)  # Adjust input size according to pooling output
-        self.norm1 = LayerNorm(128)
+        self.fc1 = Linear(top_k, nhidden*2)  # Adjust input size according to pooling output
+        self.norm1 = LayerNorm(nhidden*2)
         self.relu1 = ReLU()
 
-        self.fc2 = Linear(128, nhidden)
+        self.fc2 = Linear(nhidden*2, nhidden)
         self.norm2 = LayerNorm(nhidden)
         self.relu2 = ReLU()
 

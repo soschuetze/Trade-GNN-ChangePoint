@@ -8,8 +8,8 @@ import torch.nn as nn
 class GraphSAGE(torch.nn.Module):
     def __init__(self, input_dim, hidden_dim, dropout=0.1):
         super(GraphSAGE, self).__init__()
-        self.conv1 = SAGEConv(input_dim, 128)
-        self.conv2 = SAGEConv(128, hidden_dim)
+        self.conv1 = SAGEConv(input_dim, hidden_dim*2)
+        self.conv2 = SAGEConv(hidden_dim*2, hidden_dim)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, data):
@@ -30,11 +30,11 @@ class SiameseGNN_GraphSAGE(torch.nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.similarity = nn.PairwiseDistance()
 
-        self.fc1 = Linear(top_k, 128)  # Adjust input size according to pooling output
-        self.norm1 = LayerNorm(128)
+        self.fc1 = Linear(top_k, nhidden*2)  # Adjust input size according to pooling output
+        self.norm1 = LayerNorm(nhidden*2)
         self.relu1 = ReLU()
 
-        self.fc2 = Linear(128, nhidden)
+        self.fc2 = Linear(nhidden*2, nhidden)
         self.norm2 = LayerNorm(nhidden)
         self.relu2 = ReLU()
 
