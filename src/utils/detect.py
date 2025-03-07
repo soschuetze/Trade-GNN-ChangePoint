@@ -11,7 +11,7 @@ from functions import load_model, load_sequence, prepare_batches
 from misc import convert_labels_into_changepoints, NpEncoder, get_device
 from metrics import adjust_predicts_donut, binary_metrics_adj, compute_ari
 import ruptures as rpt
-from model import GraphSiamese
+from src.model import SiameseGNN
 
 def compute_sgnn_similarity(model, sequence, window_length):
     """

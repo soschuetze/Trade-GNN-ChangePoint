@@ -17,7 +17,7 @@ from sklearn.metrics import recall_score, precision_score, balanced_accuracy_sco
 
 from sample import sample_pairs
 from misc import collate
-from model import GraphSiamese
+from src.model import GraphSiamese
 from embedding import GCN
 
 def train(args=None):
